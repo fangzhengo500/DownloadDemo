@@ -10,6 +10,7 @@ import android.widget.ProgressBar;
 import android.widget.TextView;
 
 import com.liulishuo.okdownload.DownloadTask;
+import com.liulishuo.okdownload.StatusUtil;
 import com.liulishuo.okdownload.core.cause.EndCause;
 import com.liulishuo.okdownload.core.cause.ResumeFailedCause;
 import com.liulishuo.okdownload.core.listener.DownloadListener1;
@@ -49,8 +50,9 @@ public class SimpleDownloadActivity extends AppCompatActivity {
                 Log.i(TAG, "创建文件夹-成功: " + parentDir);
             }
         }
-        // do re-download even if the task has already been completed in the past.
-        mDownloadTask = new DownloadTask.Builder(url, parentDir.getAbsolutePath(), "test.apk")
+        File downloadFile = new File(parentDir.getParent(), "test.apk");
+        downloadFile.delete();
+        mDownloadTask = new DownloadTask.Builder(url, downloadFile)
                 // do re-download even if the task has already been completed in the past.
                 .setPassIfAlreadyCompleted(false)
                 .setMinIntervalMillisCallbackProcess(100)
@@ -71,7 +73,12 @@ public class SimpleDownloadActivity extends AppCompatActivity {
     }
 
     public void onClick(View view) {
-        mDownloadTask.enqueue(mDownloadListener1);
+        StatusUtil.Status status = StatusUtil.getStatus(mDownloadTask);
+        if (status.equals(StatusUtil.Status.RUNNING)) {
+            mDownloadTask.cancel();
+        } else {
+            mDownloadTask.enqueue(mDownloadListener1);
+        }
     }
 
     private DownloadListener1 mDownloadListener1 = new DownloadListener1() {
