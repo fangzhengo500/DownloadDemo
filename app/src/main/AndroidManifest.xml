@@ -21,5 +21,6 @@
             </intent-filter>
         </activity>
         <activity android:name=".SimpleDownloadActivity" />
+        <activity android:name=".QueueDownLoadActivity" />
     </application>
 </manifest>

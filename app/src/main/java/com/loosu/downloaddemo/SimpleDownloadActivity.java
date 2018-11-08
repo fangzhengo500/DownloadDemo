@@ -11,10 +11,10 @@ import android.widget.TextView;
 
 import com.liulishuo.okdownload.DownloadTask;
 import com.liulishuo.okdownload.StatusUtil;
+import com.liulishuo.okdownload.core.breakpoint.BreakpointInfo;
 import com.liulishuo.okdownload.core.cause.EndCause;
 import com.liulishuo.okdownload.core.cause.ResumeFailedCause;
 import com.liulishuo.okdownload.core.listener.DownloadListener1;
-import com.liulishuo.okdownload.core.listener.DownloadListener3;
 import com.liulishuo.okdownload.core.listener.assist.Listener1Assist;
 
 import java.io.File;
@@ -29,6 +29,8 @@ public class SimpleDownloadActivity extends AppCompatActivity {
     private TextView mBtnToggle;
 
     private DownloadTask mDownloadTask;
+    private String mUrl;
+    private File mDownloadFile;
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -41,7 +43,7 @@ public class SimpleDownloadActivity extends AppCompatActivity {
     }
 
     private void init(Bundle savedInstanceState) {
-        String url = "https://cdn.llscdn.com/yy/files/xs8qmxn8-lls-LLS-5.8-800-20171207-111607.apk";
+        mUrl = "https://cdn.llscdn.com/yy/files/xs8qmxn8-lls-LLS-5.8-800-20171207-111607.apk";
         File parentDir = new File(getFilesDir(), DIR_NAME);
         if (!parentDir.exists()) {
             if (!parentDir.mkdirs()) {
@@ -50,9 +52,9 @@ public class SimpleDownloadActivity extends AppCompatActivity {
                 Log.i(TAG, "创建文件夹-成功: " + parentDir);
             }
         }
-        File downloadFile = new File(parentDir.getParent(), "test.apk");
-        downloadFile.delete();
-        mDownloadTask = new DownloadTask.Builder(url, downloadFile)
+        mDownloadFile = new File(parentDir.getParent(), "test.apk");
+        //downloadFile.delete();
+        mDownloadTask = new DownloadTask.Builder(mUrl, mDownloadFile)
                 // do re-download even if the task has already been completed in the past.
                 .setPassIfAlreadyCompleted(false)
                 .setMinIntervalMillisCallbackProcess(100)
@@ -66,6 +68,17 @@ public class SimpleDownloadActivity extends AppCompatActivity {
     }
 
     private void initView(Bundle savedInstanceState) {
+        StatusUtil.Status status = StatusUtil.getStatus(mDownloadTask);
+        BreakpointInfo info = StatusUtil.getCurrentInfo(mDownloadTask);
+        long totalOffset = info.getTotalOffset();
+        long totalLength = info.getTotalLength();
+
+        String percent = String.format("%.2f", totalOffset * 100f / totalLength);
+        StringBuffer sb = new StringBuffer()
+                .append(status.toString()).append("\r\n")
+                .append(percent).append("%").append("\r\n")
+                .append(totalOffset).append('/').append(totalLength).append("\r\n");
+        mTvState.setText(sb.toString());
     }
 
     private void initListener(Bundle savedInstanceState) {
@@ -101,10 +114,10 @@ public class SimpleDownloadActivity extends AppCompatActivity {
         @Override
         public void progress(@NonNull DownloadTask task, long currentOffset, long totalLength) {
             Log.d(TAG, "progress: task = " + task + ", currentOffset = " + currentOffset + ", totalLength = " + totalLength + " " + currentOffset * 1f / totalLength + " %");
-            double percent = currentOffset * 1f / totalLength;
+            String percent = String.format("%.2f", currentOffset * 100f / totalLength);
             StringBuffer sb = new StringBuffer()
                     .append("下载中...").append("\r\n")
-                    .append(percent * 100).append("%").append("\r\n")
+                    .append(percent).append("%").append("\r\n")
                     .append(currentOffset).append('/').append(totalLength).append("\r\n");
             mTvState.setText(sb.toString());
             mProgressBar.setProgress((int) (currentOffset * 1f / totalLength * mProgressBar.getMax()));
@@ -113,6 +126,14 @@ public class SimpleDownloadActivity extends AppCompatActivity {
         @Override
         public void taskEnd(@NonNull DownloadTask task, @NonNull EndCause cause, @Nullable Exception realCause, @NonNull Listener1Assist.Listener1Model model) {
             Log.w(TAG, "connected: task = " + task + ", cause = " + cause + ", realCause = " + realCause + ", model = " + model);
+            if (cause.equals(EndCause.ERROR)) {
+                mDownloadTask = new DownloadTask.Builder(mUrl, mDownloadFile)
+                        // do re-download even if the task has already been completed in the past.
+                        .setPassIfAlreadyCompleted(false)
+                        .setMinIntervalMillisCallbackProcess(100)
+                        .build();
+            }
+            mTvState.setText(cause.toString());
         }
     };
 }
