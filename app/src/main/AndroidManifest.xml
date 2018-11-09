@@ -22,5 +22,6 @@
         </activity>
         <activity android:name=".SimpleDownloadActivity" />
         <activity android:name=".QueueDownLoadActivity" />
+        <activity android:name=".MyDownloadActivity" />
     </application>
 </manifest>

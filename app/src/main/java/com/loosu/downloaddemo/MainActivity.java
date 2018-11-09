@@ -22,6 +22,9 @@ public class MainActivity extends AppCompatActivity {
             case R.id.btn_queue_download:
                 jump2Activity(QueueDownLoadActivity.class);
                 break;
+            case R.id.btn_movie_download:
+                jump2Activity(MyDownloadActivity.class);
+                break;
         }
     }
 
