@@ -37,7 +37,7 @@ public class QueueDownloadAdapter extends AbsRecyclerAdapter {
         mContext = context;
         final DownloadContext.QueueSet queueSet = new DownloadContext.QueueSet();
         queueSet.setParentPathFile(new File(context.getFilesDir(), "queue_download/"));
-        queueSet.setMinIntervalMillisCallbackProcess(100);
+        queueSet.setMinIntervalMillisCallbackProcess(500);
         DownloadContext.Builder builder = queueSet.commit();
 
         String url1 = "http://dldir1.qq.com/weixin/android/weixin6516android1120.apk";
@@ -96,10 +96,12 @@ public class QueueDownloadAdapter extends AbsRecyclerAdapter {
 
     public void startAll(boolean isSerial) {
         mDownloadContext.start(mDownloadListener1, isSerial);
+        notifyDataSetChanged();
     }
 
     public void stop() {
         mDownloadContext.stop();
+        notifyDataSetChanged();
     }
 
     private DownloadListener1 mDownloadListener1 = new DownloadListener1() {
@@ -134,9 +136,21 @@ public class QueueDownloadAdapter extends AbsRecyclerAdapter {
 
     public void startTask(int position) {
         mDownloadContext.getTasks()[position].enqueue(mDownloadListener1);
+        notifyDataSetChanged();
     }
 
     public void stop(int position) {
         mDownloadContext.getTasks()[position].cancel();
+        notifyDataSetChanged();
+    }
+
+    public void deleteAll() {
+        DownloadTask[] tasks = mDownloadContext.getTasks();
+        for (DownloadTask task : tasks) {
+            File file = task.getFile();
+            if (file != null) {
+                file.delete();
+            }
+        }
     }
 }

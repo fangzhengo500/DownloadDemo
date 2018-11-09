@@ -43,7 +43,7 @@ public class SimpleDownloadActivity extends AppCompatActivity {
     }
 
     private void init(Bundle savedInstanceState) {
-        mUrl = "https://cdn.llscdn.com/yy/files/xs8qmxn8-lls-LLS-5.8-800-20171207-111607.apk";
+        mUrl = "http://ivystorage.oss-cn-shenzhen.aliyuncs.com/videos/2018-07-31/20180731o5sv2qj4jnaxqo7qute.mp4?security-token=CAISlQJ1q6Ft5B2yfSjIr4n5JO6DhqYV4beEV0GFgVQHVM1H3pPAoTz2IHBNdHduAuwWtf80mW1X6foYlqJ4T55IQ1Dza8J148zYEsEJ5M6T1fau5Jko1beXewHKeSOZsebWZ%2BLmNqS%2FHt6md1HDkAJq3LL%2Bbk%2FMdle5MJqP%2B%2FEFA9MMRVv6F3kkYu1bPQx%2FssQXGGLMPPK2SH7Qj3HXEVBjt3gb6wZ24r%2FtxdaHuFiMzg%2B46JdM%2BN%2BgesD7P5E3bMsuCofk5oEsKPqdihw3wgNR6aJ7gJZD%2FTr6pdyHCzFTmU7WarqKrIYzfFQiPfVnRPEY9uKPnPl5q%2FHVkJ%2Fs1xFOMOdaXiLSXom8x9HeH%2BekJluivi134JemGoABAVnDw5Dt8ohCMbBwSuq%2B8yni5u70XWQhqk%2BR%2FZboR5%2F4Tl%2BsPYyF2l1IakH2ixYwVPygWg%2B1kOOQhe871mPV6B6QjyPe35LFYtC1MO%2BMZePJ7ZC9OmLMFpDKjoSlZoYl5IOy4dzkVpgPIAv%2BIW89aBZ1y%2FNZYjxW1mapP3GILP0%3D&OSSAccessKeyId=STS.NJLoT7ky4VuoUg4eTRXBk1VkC&Expires=1541759731&Signature=0z5pEESjDKbPa1tta4UAu62H9ww%3D";
         File parentDir = new File(getFilesDir(), DIR_NAME);
         if (!parentDir.exists()) {
             if (!parentDir.mkdirs()) {
@@ -70,10 +70,15 @@ public class SimpleDownloadActivity extends AppCompatActivity {
     private void initView(Bundle savedInstanceState) {
         StatusUtil.Status status = StatusUtil.getStatus(mDownloadTask);
         BreakpointInfo info = StatusUtil.getCurrentInfo(mDownloadTask);
-        long totalOffset = info.getTotalOffset();
-        long totalLength = info.getTotalLength();
+        String percent = "0.00%";
+        long totalOffset = 0;
+        long totalLength = 0;
+        if (info != null) {
+            totalOffset = info.getTotalOffset();
+            totalLength = info.getTotalLength();
 
-        String percent = String.format("%.2f", totalOffset * 100f / totalLength);
+            percent = String.format("%.2f", totalOffset * 100f / totalLength);
+        }
         StringBuffer sb = new StringBuffer()
                 .append(status.toString()).append("\r\n")
                 .append(percent).append("%").append("\r\n")

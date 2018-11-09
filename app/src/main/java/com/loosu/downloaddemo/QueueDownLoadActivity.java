@@ -6,7 +6,10 @@ import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.view.View;
+import android.widget.Button;
 import android.widget.RadioGroup;
+import android.widget.TextView;
+import android.widget.Toast;
 
 import com.liulishuo.okdownload.DownloadTask;
 import com.liulishuo.okdownload.StatusUtil;
@@ -15,8 +18,8 @@ import com.loosu.downloaddemo.adapter.recyclerview.IRecyclerItemClickListener;
 
 public class QueueDownLoadActivity extends AppCompatActivity implements View.OnClickListener, RadioGroup.OnCheckedChangeListener, IRecyclerItemClickListener {
 
-    private View mBtnStartOrStop;
-    private View mBtnDeleteAll;
+    private Button mBtnStartOrStop;
+    private Button mBtnDeleteAll;
     private RadioGroup mRgOrder;
     private RecyclerView mViewList;
 
@@ -37,8 +40,8 @@ public class QueueDownLoadActivity extends AppCompatActivity implements View.OnC
     }
 
     private void findView(Bundle savedInstanceState) {
-        mBtnStartOrStop = (View) findViewById(R.id.btn_start_or_stop);
-        mBtnDeleteAll = (View) findViewById(R.id.btn_delete_all);
+        mBtnStartOrStop = (Button) findViewById(R.id.btn_start_or_stop);
+        mBtnDeleteAll = (Button) findViewById(R.id.btn_delete_all);
         mRgOrder = (RadioGroup) findViewById(R.id.rg_order);
         mViewList = (RecyclerView) findViewById(R.id.view_list);
     }
@@ -62,16 +65,23 @@ public class QueueDownLoadActivity extends AppCompatActivity implements View.OnC
                 onClickStartOrStop();
                 break;
             case R.id.btn_delete_all:
+                onClickDeleteAll();
                 break;
         }
+    }
+
+    private void onClickDeleteAll() {
+        mDownloadAdapter.deleteAll();
     }
 
     private void onClickStartOrStop() {
         if (mDownloadAdapter.isRunning()) {
             mDownloadAdapter.stop();
+            mBtnStartOrStop.setText("全部开始");
         } else {
             boolean serial = mRgOrder.getCheckedRadioButtonId() == R.id.rb_serial;
             mDownloadAdapter.startAll(serial);
+            mBtnStartOrStop.setText("全部暂停");
         }
     }
 
@@ -85,8 +95,10 @@ public class QueueDownLoadActivity extends AppCompatActivity implements View.OnC
         DownloadTask task = mDownloadAdapter.getItem(position);
         if (StatusUtil.getStatus(task) == StatusUtil.Status.RUNNING) {
             mDownloadAdapter.stop(position);
-        }else{
+            Toast.makeText(this, "暂停: " + task.getFilename(), Toast.LENGTH_SHORT).show();
+        } else {
             mDownloadAdapter.startTask(position);
+            Toast.makeText(this, "开始: " + task.getFilename(), Toast.LENGTH_SHORT).show();
         }
     }
 }
