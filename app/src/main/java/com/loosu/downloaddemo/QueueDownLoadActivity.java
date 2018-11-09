@@ -8,9 +8,12 @@ import android.support.v7.widget.RecyclerView;
 import android.view.View;
 import android.widget.RadioGroup;
 
+import com.liulishuo.okdownload.DownloadTask;
+import com.liulishuo.okdownload.StatusUtil;
 import com.loosu.downloaddemo.adapter.QueueDownloadAdapter;
+import com.loosu.downloaddemo.adapter.recyclerview.IRecyclerItemClickListener;
 
-public class QueueDownLoadActivity extends AppCompatActivity implements View.OnClickListener, RadioGroup.OnCheckedChangeListener {
+public class QueueDownLoadActivity extends AppCompatActivity implements View.OnClickListener, RadioGroup.OnCheckedChangeListener, IRecyclerItemClickListener {
 
     private View mBtnStartOrStop;
     private View mBtnDeleteAll;
@@ -49,6 +52,7 @@ public class QueueDownLoadActivity extends AppCompatActivity implements View.OnC
         mBtnStartOrStop.setOnClickListener(this);
         mBtnDeleteAll.setOnClickListener(this);
         mRgOrder.setOnCheckedChangeListener(this);
+        mDownloadAdapter.setItemClickListener(this);
     }
 
     @Override
@@ -74,5 +78,15 @@ public class QueueDownLoadActivity extends AppCompatActivity implements View.OnC
     @Override
     public void onCheckedChanged(RadioGroup group, int checkedId) {
 
+    }
+
+    @Override
+    public void onItemClick(RecyclerView parent, int position, RecyclerView.ViewHolder holder, View view) {
+        DownloadTask task = mDownloadAdapter.getItem(position);
+        if (StatusUtil.getStatus(task) == StatusUtil.Status.RUNNING) {
+            mDownloadAdapter.stop(position);
+        }else{
+            mDownloadAdapter.startTask(position);
+        }
     }
 }

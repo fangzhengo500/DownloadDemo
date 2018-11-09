@@ -20,10 +20,13 @@ import com.liulishuo.okdownload.core.cause.ResumeFailedCause;
 import com.liulishuo.okdownload.core.listener.DownloadListener1;
 import com.liulishuo.okdownload.core.listener.assist.Listener1Assist;
 import com.loosu.downloaddemo.R;
+import com.loosu.downloaddemo.adapter.recyclerview.ARecyclerAdapter;
+import com.loosu.downloaddemo.adapter.recyclerview.AbsRecyclerAdapter;
+import com.loosu.downloaddemo.adapter.recyclerview.RecyclerHolder;
 
 import java.io.File;
 
-public class QueueDownloadAdapter extends RecyclerView.Adapter<QueueDownloadAdapter.Holder> {
+public class QueueDownloadAdapter extends AbsRecyclerAdapter {
     private static final String TAG = "QueueDownloadAdapter";
 
     private final Context mContext;
@@ -55,26 +58,31 @@ public class QueueDownloadAdapter extends RecyclerView.Adapter<QueueDownloadAdap
         mDownloadContext = builder.build();
     }
 
-    @NonNull
     @Override
-    public Holder onCreateViewHolder(@NonNull ViewGroup viewGroup, int i) {
-        View itemView = LayoutInflater.from(viewGroup.getContext()).inflate(R.layout.item_queue_download, viewGroup, false);
-        return new Holder(itemView);
+    protected int getItemLayoutId(int viewType) {
+        return R.layout.item_queue_download;
     }
 
+
     @Override
-    public void onBindViewHolder(@NonNull Holder holder, int i) {
-        DownloadTask task = mDownloadContext.getTasks()[i];
+    protected void onBindViewData(RecyclerHolder holder, int position) {
+        DownloadTask task = mDownloadContext.getTasks()[position];
         StatusUtil.Status status = StatusUtil.getStatus(task);
         BreakpointInfo info = StatusUtil.getCurrentInfo(task);
 
         String url = task.getUrl();
-        holder.tvName.setText(url.substring(url.lastIndexOf('/')+1));
-        holder.tvState.setText(status.toString());
+        holder.setText(R.id.tv_name, url.substring(url.lastIndexOf('/') + 1));
+        holder.setText(R.id.tv_state, status.toString());
 
         if (info != null) {
-            holder.progressBar.setProgress((int) ((info.getTotalOffset() * 1f / info.getTotalLength()) * holder.progressBar.getMax()));
+            ProgressBar progressBar = holder.getView(R.id.progress);
+            progressBar.setProgress((int) ((info.getTotalOffset() * 1f / info.getTotalLength()) * progressBar.getMax()));
         }
+    }
+
+    @Override
+    public DownloadTask getItem(int position) {
+        return mDownloadContext.getTasks()[position];
     }
 
     @Override
@@ -92,20 +100,6 @@ public class QueueDownloadAdapter extends RecyclerView.Adapter<QueueDownloadAdap
 
     public void stop() {
         mDownloadContext.stop();
-    }
-
-    public class Holder extends RecyclerView.ViewHolder {
-        TextView tvName;
-        TextView tvState;
-        ProgressBar progressBar;
-
-        public Holder(View itemView) {
-            super(itemView);
-
-            tvName = itemView.findViewById(R.id.tv_name);
-            tvState = itemView.findViewById(R.id.tv_state);
-            progressBar = itemView.findViewById(R.id.progress);
-        }
     }
 
     private DownloadListener1 mDownloadListener1 = new DownloadListener1() {
@@ -137,4 +131,12 @@ public class QueueDownloadAdapter extends RecyclerView.Adapter<QueueDownloadAdap
             Log.e(TAG, "taskEnd: task = " + task.getFilename() + ", cause = " + cause + ", realCause = " + realCause + ", model = " + model);
         }
     };
+
+    public void startTask(int position) {
+        mDownloadContext.getTasks()[position].enqueue(mDownloadListener1);
+    }
+
+    public void stop(int position) {
+        mDownloadContext.getTasks()[position].cancel();
+    }
 }
