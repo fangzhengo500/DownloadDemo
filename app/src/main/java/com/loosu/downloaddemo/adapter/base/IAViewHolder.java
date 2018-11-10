@@ -1,4 +1,4 @@
-package com.loosu.downloaddemo.adapter;
+package com.loosu.downloaddemo.adapter.base;
 
 import android.graphics.drawable.Drawable;
 import android.support.annotation.ColorInt;

@@ -7,9 +7,14 @@ import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
+import android.view.View;
 
 import com.alibaba.fastjson.JSONObject;
+import com.loosu.downloaddemo.adapter.MovieAdapter;
+import com.loosu.downloaddemo.adapter.MovieDownloadAdapter;
+import com.loosu.downloaddemo.adapter.base.recyclerview.IRecyclerItemClickListener;
 import com.loosu.downloaddemo.domain.IndexCategoryResponse;
+import com.loosu.downloaddemo.domain.MovieBean;
 
 import java.io.IOException;
 
@@ -20,7 +25,7 @@ import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.Response;
 
-public class MyDownloadActivity extends AppCompatActivity implements SwipeRefreshLayout.OnRefreshListener {
+public class MyDownloadActivity extends AppCompatActivity implements SwipeRefreshLayout.OnRefreshListener, IRecyclerItemClickListener {
     private static final String TAG = "MyDownloadActivity";
 
     private SwipeRefreshLayout mLayoutRefresh;
@@ -30,6 +35,7 @@ public class MyDownloadActivity extends AppCompatActivity implements SwipeRefres
     OkHttpClient mHttpClient = new OkHttpClient();
 
     private MovieAdapter mMovieAdapter;
+    private MovieDownloadAdapter mMovieDownloadAdapter;
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -43,6 +49,7 @@ public class MyDownloadActivity extends AppCompatActivity implements SwipeRefres
 
     private void init(Bundle savedInstanceState) {
         mMovieAdapter = new MovieAdapter();
+        mMovieDownloadAdapter = new MovieDownloadAdapter();
     }
 
     private void findView(Bundle savedInstanceState) {
@@ -55,26 +62,29 @@ public class MyDownloadActivity extends AppCompatActivity implements SwipeRefres
         mMovieList.setLayoutManager(new LinearLayoutManager(this));
         mMovieList.setAdapter(mMovieAdapter);
         mDownloadList.setLayoutManager(new LinearLayoutManager(this));
+        mDownloadList.setAdapter(mMovieDownloadAdapter);
 
-        loadMovies(mMovieAdapter.getItemCount() / 10 + 1);
+        refreshData();
     }
 
     private void initListener(Bundle savedInstanceState) {
         mLayoutRefresh.setOnRefreshListener(this);
+        mMovieAdapter.setItemClickListener(this);
     }
 
     @Override
     public void onRefresh() {
-        loadMovies(mMovieAdapter.getItemCount() / 10 + 1);
+        refreshData();
     }
 
-    private void loadMovies(int page) {
+    private void refreshData() {
         mLayoutRefresh.setRefreshing(true);
 
         Request request = new Request.Builder()
                 .url("http://test2.i-weiying.com/api/index_categoryList")
                 .get()
                 .build();
+
         HttpUrl.Builder urlBuilder = request.url().newBuilder()
                 .addQueryParameter("sign", "TY-8da23798c69b7bf706604f25c2c9549ae21593b6bdf4be64")
                 .addQueryParameter("ClientSource", "1")
@@ -82,7 +92,7 @@ public class MyDownloadActivity extends AppCompatActivity implements SwipeRefres
                 .addQueryParameter("Version", "1")
                 .addQueryParameter("mobile_unique_code", "1")
                 .addQueryParameter("type", "hot")
-                .addQueryParameter("page", String.valueOf(page));
+                .addQueryParameter("page", "1");
         Request targetRequest = request.newBuilder()
                 .url(urlBuilder.build())
                 .build();
@@ -104,10 +114,17 @@ public class MyDownloadActivity extends AppCompatActivity implements SwipeRefres
                 runOnUiThread(new Runnable() {
                     @Override
                     public void run() {
-                        mMovieAdapter.addDatas(indexCategoryResponse.getData());
+                        mMovieAdapter.setDatas(indexCategoryResponse.getData());
                     }
                 });
             }
         });
+    }
+
+    @Override
+    public void onItemClick(RecyclerView parent, int position, RecyclerView.ViewHolder holder, View view) {
+        MovieBean movieBean = mMovieAdapter.getItem(position);
+        mMovieAdapter.removeData(position);
+        mMovieDownloadAdapter.addData(0, movieBean);
     }
 }

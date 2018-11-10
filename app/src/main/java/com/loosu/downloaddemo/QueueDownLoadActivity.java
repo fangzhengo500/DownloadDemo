@@ -8,13 +8,12 @@ import android.support.v7.widget.RecyclerView;
 import android.view.View;
 import android.widget.Button;
 import android.widget.RadioGroup;
-import android.widget.TextView;
 import android.widget.Toast;
 
 import com.liulishuo.okdownload.DownloadTask;
 import com.liulishuo.okdownload.StatusUtil;
 import com.loosu.downloaddemo.adapter.QueueDownloadAdapter;
-import com.loosu.downloaddemo.adapter.recyclerview.IRecyclerItemClickListener;
+import com.loosu.downloaddemo.adapter.base.recyclerview.IRecyclerItemClickListener;
 
 public class QueueDownLoadActivity extends AppCompatActivity implements View.OnClickListener, RadioGroup.OnCheckedChangeListener, IRecyclerItemClickListener {
 

@@ -1,4 +1,4 @@
-package com.loosu.downloaddemo.adapter.recyclerview;
+package com.loosu.downloaddemo.adapter.base.recyclerview;
 
 import android.support.annotation.Nullable;
 import android.support.v7.widget.RecyclerView;

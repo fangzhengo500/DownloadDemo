@@ -1,10 +1,11 @@
-package com.loosu.downloaddemo;
+package com.loosu.downloaddemo.adapter;
 
 import android.widget.ImageView;
 
 import com.bumptech.glide.Glide;
-import com.loosu.downloaddemo.adapter.recyclerview.ARecyclerAdapter;
-import com.loosu.downloaddemo.adapter.recyclerview.RecyclerHolder;
+import com.loosu.downloaddemo.R;
+import com.loosu.downloaddemo.adapter.base.recyclerview.ARecyclerAdapter;
+import com.loosu.downloaddemo.adapter.base.recyclerview.RecyclerHolder;
 import com.loosu.downloaddemo.domain.MovieBean;
 
 import java.util.List;
@@ -40,5 +41,10 @@ public class MovieAdapter extends ARecyclerAdapter<MovieBean> {
     public void addDatas(List<MovieBean> datas) {
         mDatas.addAll(datas);
         notifyDataSetChanged();
+    }
+
+    public void removeData(int position) {
+        mDatas.remove(position);
+        notifyItemRemoved(position);
     }
 }

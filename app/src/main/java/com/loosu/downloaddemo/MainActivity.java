@@ -6,6 +6,11 @@ import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.view.View;
 
+import com.loosu.downloaddemo.MyDownloadActivity;
+import com.loosu.downloaddemo.QueueDownLoadActivity;
+import com.loosu.downloaddemo.R;
+import com.loosu.downloaddemo.SimpleDownloadActivity;
+
 public class MainActivity extends AppCompatActivity {
 
     @Override

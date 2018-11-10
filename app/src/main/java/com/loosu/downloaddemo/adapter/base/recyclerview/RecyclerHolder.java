@@ -1,4 +1,4 @@
-package com.loosu.downloaddemo.adapter.recyclerview;
+package com.loosu.downloaddemo.adapter.base.recyclerview;
 
 import android.graphics.drawable.Drawable;
 import android.support.annotation.DrawableRes;
@@ -10,7 +10,7 @@ import android.view.View;
 import android.widget.ImageView;
 import android.widget.TextView;
 
-import com.loosu.downloaddemo.adapter.IAViewHolder;
+import com.loosu.downloaddemo.adapter.base.IAViewHolder;
 
 
 /**
