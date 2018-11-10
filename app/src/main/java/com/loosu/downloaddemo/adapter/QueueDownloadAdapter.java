@@ -118,7 +118,7 @@ public class QueueDownloadAdapter extends AbsRecyclerAdapter {
         @Override
         public void progress(@NonNull DownloadTask task, long currentOffset, long totalLength) {
             float precent = currentOffset * 100f / totalLength;
-            Log.d(TAG, String.format("connected: task = %s ---- %.2f", task.getFilename(), precent));
+            Log.d(TAG, String.format("progress: task = %s ---- %.2f", task.getFilename(), precent));
             notifyDataSetChanged();
         }
 
