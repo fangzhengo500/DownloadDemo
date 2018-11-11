@@ -1,6 +1,6 @@
 package com.loosu.downloaddemo.adapter;
 
-import android.support.annotation.Nullable;
+import android.content.Context;
 import android.widget.ImageView;
 
 import com.bumptech.glide.Glide;
@@ -8,12 +8,17 @@ import com.loosu.downloaddemo.R;
 import com.loosu.downloaddemo.adapter.base.recyclerview.ARecyclerAdapter;
 import com.loosu.downloaddemo.adapter.base.recyclerview.RecyclerHolder;
 import com.loosu.downloaddemo.domain.MovieBean;
+import com.loosu.downloaddemo.download.MovieDownloadManager;
 
 import java.util.List;
 
 public class MovieDownloadAdapter extends ARecyclerAdapter<MovieBean> {
-    public MovieDownloadAdapter() {
+    private Context mContext = null;
+
+
+    public MovieDownloadAdapter(Context context) {
         super(null);
+        mContext = context;
     }
 
     @Override
@@ -43,4 +48,6 @@ public class MovieDownloadAdapter extends ARecyclerAdapter<MovieBean> {
         mDatas.add(index, data);
         notifyItemInserted(index);
     }
+
+
 }

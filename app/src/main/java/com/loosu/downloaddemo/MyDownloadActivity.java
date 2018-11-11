@@ -15,6 +15,7 @@ import com.loosu.downloaddemo.adapter.MovieDownloadAdapter;
 import com.loosu.downloaddemo.adapter.base.recyclerview.IRecyclerItemClickListener;
 import com.loosu.downloaddemo.domain.IndexCategoryResponse;
 import com.loosu.downloaddemo.domain.MovieBean;
+import com.loosu.downloaddemo.download.MovieDownloadManager;
 
 import java.io.IOException;
 
@@ -49,7 +50,7 @@ public class MyDownloadActivity extends AppCompatActivity implements SwipeRefres
 
     private void init(Bundle savedInstanceState) {
         mMovieAdapter = new MovieAdapter();
-        mMovieDownloadAdapter = new MovieDownloadAdapter();
+        mMovieDownloadAdapter = new MovieDownloadAdapter(this);
     }
 
     private void findView(Bundle savedInstanceState) {
@@ -70,7 +71,16 @@ public class MyDownloadActivity extends AppCompatActivity implements SwipeRefres
     private void initListener(Bundle savedInstanceState) {
         mLayoutRefresh.setOnRefreshListener(this);
         mMovieAdapter.setItemClickListener(this);
+        mMovieDownloadAdapter.setItemClickListener(this);
     }
+
+    @Override
+    protected void onStop() {
+        super.onStop();
+        MovieDownloadManager.getInstance(this).stopAll();
+    }
+
+
 
     @Override
     public void onRefresh() {
@@ -123,8 +133,24 @@ public class MyDownloadActivity extends AppCompatActivity implements SwipeRefres
 
     @Override
     public void onItemClick(RecyclerView parent, int position, RecyclerView.ViewHolder holder, View view) {
-        MovieBean movieBean = mMovieAdapter.getItem(position);
-        mMovieAdapter.removeData(position);
-        mMovieDownloadAdapter.addData(0, movieBean);
+        if (parent.getId() == R.id.movie_list) {
+            MovieBean movieBean = mMovieAdapter.getItem(position);
+            mMovieAdapter.removeData(position);
+            mMovieDownloadAdapter.addData(0, movieBean);
+
+            MovieDownloadManager.getInstance(this).addTask(movieBean);
+
+        } else if (parent.getId() == R.id.download_list) {
+            switch (view.getId()) {
+                case R.id.btn_re_download:
+                    break;
+                case R.id.btn_cancel:
+                    break;
+                default:
+                    MovieBean movie = mMovieDownloadAdapter.getItem(position);
+                    MovieDownloadManager.getInstance(this).startTask(movie);
+                    break;
+            }
+        }
     }
 }

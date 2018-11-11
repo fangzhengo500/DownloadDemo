@@ -3,28 +3,28 @@ package com.loosu.downloaddemo.download;
 import android.content.Context;
 import android.net.Uri;
 import android.os.Handler;
-import android.os.SystemClock;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
+import android.util.Log;
 
 import com.liulishuo.okdownload.DownloadTask;
+import com.liulishuo.okdownload.OkDownload;
 import com.liulishuo.okdownload.core.Util;
 import com.liulishuo.okdownload.core.cause.EndCause;
 import com.liulishuo.okdownload.core.cause.ResumeFailedCause;
 import com.liulishuo.okdownload.core.listener.DownloadListener1;
-import com.liulishuo.okdownload.core.listener.DownloadListener2;
 import com.liulishuo.okdownload.core.listener.assist.Listener1Assist;
 import com.loosu.downloaddemo.domain.MovieBean;
 
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.ListIterator;
 import java.util.Map;
 import java.util.concurrent.Executor;
 import java.util.concurrent.SynchronousQueue;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicInteger;
 
 public class MovieDownloadManager implements IMovieDownloadManager {
     private static final String TAG = "MovieDownloadManager";
@@ -38,24 +38,16 @@ public class MovieDownloadManager implements IMovieDownloadManager {
 
     private static IMovieDownloadManager mInstance;
 
-
     private final Context mContext;
     private List<MovieTask> mMovieTasks = new ArrayList<>();
     private volatile boolean isStarted = false;
-    private final MovieDownloadListener mDownloadListener;
     private final QueueSet mQueueSet;
     private Handler mUiHandler;
 
-    private MovieDownloadManager(Context context) {
-        this(context, null, new QueueSet(), null);
-    }
-
     private MovieDownloadManager(@NonNull Context context,
-                                 @NonNull MovieDownloadListener downloadListener,
                                  @NonNull QueueSet set,
                                  @NonNull Handler uiHandler) {
         mContext = context;
-        mDownloadListener = downloadListener;
         mQueueSet = set;
         mUiHandler = uiHandler;
     }
@@ -64,7 +56,9 @@ public class MovieDownloadManager implements IMovieDownloadManager {
         if (mInstance == null) {
             synchronized (MovieDownloadManager.class) {
                 if (mInstance == null) {
-                    mInstance = new MovieDownloadManager(context);
+                    QueueSet queueSet = new QueueSet()
+                            .setParentPathFile(context.getFilesDir());
+                    mInstance = new MovieDownloadManager(context, queueSet, null);
                 }
             }
         }
@@ -75,6 +69,60 @@ public class MovieDownloadManager implements IMovieDownloadManager {
         return isStarted;
     }
 
+
+    @Override
+    public void addTask(MovieBean movie) {
+        DownloadTask downloadTask = new DownloadTask.Builder(movie.getMedia(), mQueueSet.getParentDirUri())
+                .setFilenameFromResponse(true)
+                .setMinIntervalMillisCallbackProcess(mQueueSet.getMinIntervalMillisCallbackProcess())
+                .build();
+        MovieTask movieTask = new MovieTask(movie, downloadTask);
+        mMovieTasks.add(movieTask);
+    }
+
+    @Override
+    public void addTask(MovieBean movie, String file) {
+        DownloadTask downloadTask = new DownloadTask.Builder(movie.getMedia(), new File(file))
+                .setMinIntervalMillisCallbackProcess(mQueueSet.getMinIntervalMillisCallbackProcess())
+                .build();
+        MovieTask movieTask = new MovieTask(movie, downloadTask);
+        mMovieTasks.add(movieTask);
+    }
+
+    @Override
+    public void removeTask(MovieBean movie) {
+        ListIterator<MovieTask> iterator = mMovieTasks.listIterator();
+        while (iterator.hasNext()) {
+            MovieTask movieTask = iterator.next();
+            if (movie.equals(movieTask.getMovie())) {
+                movieTask.getDownloadTask().cancel();
+                iterator.remove();
+                break;
+            }
+        }
+    }
+
+    @Override
+    public Status getTaskState(MovieBean movieBean) {
+        return Status.IDLE;
+    }
+
+    @Override
+    public void startTask(MovieBean movieBean) {
+        for (MovieTask movieTask : mMovieTasks) {
+            if (movieTask.getMovie().equals(movieBean)) {
+                movieTask.getDownloadTask().enqueue(mDownloadListener1);
+                return;
+            }
+        }
+    }
+
+    @Override
+    public void stopTask(MovieBean movieBean) {
+
+    }
+
+    @Override
     public void startAll(boolean isSerial) {
         isStarted = true;
 
@@ -96,31 +144,17 @@ public class MovieDownloadManager implements IMovieDownloadManager {
         }
     }
 
-
     @Override
-    public void addTask(MovieBean movie, String file) {
-//        new DownloadTask.Builder(movie.getMedia(), new File(file))
-//                .
-//                MovieTask movieTask = new MovieTask(movie, null);
-//        mMovieTasks.add(movieTask);
-    }
-
-    @Override
-    public void removeTask(MovieBean movie) {
-
+    public void stopAll() {
+        DownloadTask[] tasks = new DownloadTask[mMovieTasks.size()];
+        for (int i = 0; i < mMovieTasks.size(); i++) {
+            tasks[i] = mMovieTasks.get(i).getDownloadTask();
+        }
+        OkDownload.with().downloadDispatcher().cancel(tasks);
     }
 
     private void executeOnSerialExecutor(Runnable runnable) {
         SERIAL_EXECUTOR.execute(runnable);
-    }
-
-    private void callbackQueueEndOnSerialLoop(boolean isAutoCallToUiThread) {
-
-        if (isAutoCallToUiThread) {
-
-        } else {
-
-        }
     }
 
     public static class QueueSet {
@@ -250,39 +284,34 @@ public class MovieDownloadManager implements IMovieDownloadManager {
             mTag = tag;
             return this;
         }
-
-//        public Builder commit() {
-//            return new MovieDownloadManager.Builder();
-//        }
     }
 
     private DownloadListener1 mDownloadListener1 = new DownloadListener1() {
-        @Override
-        public void taskStart(@NonNull DownloadTask task, @NonNull Listener1Assist.Listener1Model
-                model) {
 
+        @Override
+        public void taskStart(@NonNull DownloadTask task, @NonNull Listener1Assist.Listener1Model model) {
+            Log.i(TAG, "taskStart: task = " + task.getFilename() + ", model = " + model);
         }
 
         @Override
         public void retry(@NonNull DownloadTask task, @NonNull ResumeFailedCause cause) {
-
+            Log.w(TAG, "retry: task = " + task.getFilename() + ", cause = " + cause);
         }
 
         @Override
-        public void connected(@NonNull DownloadTask task, int blockCount, long currentOffset,
-                              long totalLength) {
-
+        public void connected(@NonNull DownloadTask task, int blockCount, long currentOffset, long totalLength) {
+            Log.i(TAG, "connected: task = " + task.getFilename() + ", blockCount = " + currentOffset);
         }
 
         @Override
         public void progress(@NonNull DownloadTask task, long currentOffset, long totalLength) {
-
+            float precent = currentOffset * 100f / totalLength;
+            Log.d(TAG, String.format("progress: task = %s ---- %.2f", task.getFilename(), precent));
         }
 
         @Override
-        public void taskEnd(@NonNull DownloadTask task, @NonNull EndCause
-                cause, @Nullable Exception realCause, @NonNull Listener1Assist.Listener1Model model) {
-
+        public void taskEnd(@NonNull DownloadTask task, @NonNull EndCause cause, @Nullable Exception realCause, @NonNull Listener1Assist.Listener1Model model) {
+            Log.e(TAG, "taskEnd: task = " + task.getFilename() + ", cause = " + cause + ", realCause = " + realCause + ", model = " + model);
         }
     };
 }

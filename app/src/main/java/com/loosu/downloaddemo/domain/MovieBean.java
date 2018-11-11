@@ -1,5 +1,7 @@
 package com.loosu.downloaddemo.domain;
 
+import android.support.annotation.Nullable;
+
 import com.alibaba.fastjson.annotation.JSONField;
 
 public class MovieBean {
@@ -181,5 +183,13 @@ public class MovieBean {
 
     public void setIsStar(int isStar) {
         mIsStar = isStar;
+    }
+
+    @Override
+    public boolean equals(@Nullable Object obj) {
+        if (!(obj instanceof MovieBean)) {
+            return false;
+        }
+        return ((MovieBean) obj).getId() == this.getId();
     }
 }
